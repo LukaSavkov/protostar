@@ -8,7 +8,7 @@ LABEL maintainer="Janko Rakonjac"
 WORKDIR /app
 
 # Copy go mod and sum files
-COPY ./health-check/go.mod ./health-check/go.sum ./
+COPY ./protostar/health-check/go.mod ./protostar/health-check/go.sum ./
 
 COPY ./magnetar ../magnetar
 COPY ./oort ../oort
@@ -17,7 +17,7 @@ COPY ./oort ../oort
 RUN go mod download
 
 # Copy everything from the current directory to the Working Directory inside the container
-COPY ./health-check/ .
+COPY ./protostar/health-check/ .
 
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
