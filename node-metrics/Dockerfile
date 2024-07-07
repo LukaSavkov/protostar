@@ -8,14 +8,14 @@ LABEL maintainer="Aleksandar Pavlovic"
 WORKDIR /app
 
 # Copy go mod and sum files
-COPY ./node-metrics/go.mod ./node-metrics/go.sum ./
+COPY ./protostar/node-metrics/go.mod ./protostar/node-metrics/go.sum ./
 
 
 # Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
 RUN go mod download
 
 # Copy everything from the current directory to the Working Directory inside the container
-COPY ./node-metrics/ .
+COPY ./protostar/node-metrics/ .
 
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
