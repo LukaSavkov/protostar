@@ -1,36 +1,50 @@
-# protostar
+To close a JSON code block in Markdown, you use three backticks (` ``` `) to start and end the code block. Here's an example of how to properly close a JSON code block:
+
+```markdown
+\```json
+{
+    "key": "value"
+}
+\```
+```
+
+Here is how your documentation should look with properly closed JSON code blocks:
+
+```markdown
+# Protostar
 Metrics aggregator for c12s platform
 
-# API Documentation
+## API Documentation
 
-## GET /api/metrics-api/{timestamp}/{nodeId}
+### GET /api/metrics-api/{timestamp}/{nodeId}
 
-### Description
+#### Description
 The endpoint retrieves node metrics starting from a specified timestamp.
 
-### Request
+#### Request
 
-#### URL
+**URL**  
 `http://localhost:8086/api/metrics-api/{timestamp}/{nodeId}`
 
-#### Method
+**Method**  
 `GET`
 
-#### URL Path Parameters
-| Parameter | Type   | Description                                                  |
-|-----------|--------|--------------------------------------------------------------|
-| timestamp | string | Unix value of the timestamp from which we want values to start. |
-| nodeId    | string | Identification of the node from which we want to collect our metric data. |
+**URL Path Parameters**
 
-### Request Headers
+| Parameter | Type   | Description                                                    |
+|-----------|--------|----------------------------------------------------------------|
+| timestamp | string | Unix value of the timestamp from which we want values to start. |
+| nodeId    | string | Identification of the node from which we want to collect metrics. |
+
+**Request Headers**  
 None
 
-EXAMPLE
-Using Postman
-http://localhost:8086/api/metrics-api/1718723240/b2696545-7931-47c7-af11-cc2ce1d5e10d
+**Example**  
+Using Postman:  
+`http://localhost:8086/api/metrics-api/1718723240/b2696545-7931-47c7-af11-cc2ce1d5e10d`
 
+#### Response - 201 Success
 
-### Response - 201 Success
 ```json
 {
     "status": 201,
@@ -61,14 +75,8 @@ http://localhost:8086/api/metrics-api/1718723240/b2696545-7931-47c7-af11-cc2ce1d
                         "nodeID": "b2696545-7931-47c7-af11-cc2ce1d5e10d"
                     },
                     "values": [
-                        [
-                            1720514135,
-                            "0.034371"
-                        ],
-                        [
-                            1720514851,
-                            "0.056788"
-                        ]
+                        [1720514135, "0.034371"],
+                        [1720514851, "0.056788"]
                     ]
                 },
                 {
@@ -94,14 +102,8 @@ http://localhost:8086/api/metrics-api/1718723240/b2696545-7931-47c7-af11-cc2ce1d
                         "nodeID": "b2696545-7931-47c7-af11-cc2ce1d5e10d"
                     },
                     "values": [
-                        [
-                            1720514135,
-                            "21.141999"
-                        ],
-                        [
-                            1720514851,
-                            "52.748081"
-                        ]
+                        [1720514135, "21.141999"],
+                        [1720514851, "52.748081"]
                     ]
                 },
                 {
@@ -127,14 +129,8 @@ http://localhost:8086/api/metrics-api/1718723240/b2696545-7931-47c7-af11-cc2ce1d
                         "nodeID": "b2696545-7931-47c7-af11-cc2ce1d5e10d"
                     },
                     "values": [
-                        [
-                            1720514135,
-                            "0.03344"
-                        ],
-                        [
-                            1720514851,
-                            "0.172057"
-                        ]
+                        [1720514135, "0.03344"],
+                        [1720514851, "0.172057"]
                     ]
                 },
                 {
@@ -152,7 +148,9 @@ http://localhost:8086/api/metrics-api/1718723240/b2696545-7931-47c7-af11-cc2ce1d
                         "container_label_com_vmware_cp_artifact_flavor": "sha256:c50c90cfd9d12b445b011e6ad529f1ad3daea45c26d20b00732fae3cd71f6a83",
                         "container_label_org_opencontainers_image_base_name": "docker.io/bitnami/minideb:bookworm",
                         "container_label_org_opencontainers_image_created": "2024-07-04T12:49:39Z",
-                        "container_label_org_opencontainers_image_description": "Application packaged by Broadcom, Inc.",
+                        "container_label_org_open
+
+containers_image_description": "Application packaged by Broadcom, Inc.",
                         "container_label_org_opencontainers_image_documentation": "https://github.com/bitnami/containers/tree/main/bitnami/etcd/README.md",
                         "container_label_org_opencontainers_image_licenses": "Apache-2.0",
                         "container_label_org_opencontainers_image_ref_name": "3.5.14-debian-12-r4",
@@ -169,67 +167,60 @@ http://localhost:8086/api/metrics-api/1718723240/b2696545-7931-47c7-af11-cc2ce1d
                         "nodeID": "b2696545-7931-47c7-af11-cc2ce1d5e10d"
                     },
                     "values": [
-                        [
-                            1720514135,
-                            "0.685858"
-                        ],
-                        [
-                            1720514851,
-                            "3.092391"
-                        ]
+                        [1720514135, "0.685858"],
+                        [1720514851, "3.092391"]
                     ]
                 }
             ]
         }
     }
-} ... Up to 10 000 results 
+}
+```
 
-#### Response Body Properties (201 Success)
-| Property    | Type   | Description                                        |
-|-------------|--------|----------------------------------------------------|
-| status      | int    | HTTP status code                                   |
-| data        | object | Contains the status of the request and the metrics data |
-| status      | string | Status of the data retrieval (`success`)           |
-| resultType  | string | Type of result (`matrix`)                          |
-| result      | array  | Array of metrics and their values                  |
-| metric      | object | Contains various metric labels and their values    |
-| values      | array  | Array of timestamp and metric value pairs          |
+**Response Body Properties (201 Success)**
 
+| Property   | Type   | Description                                             |
+|------------|--------|---------------------------------------------------------|
+| status     | int    | HTTP status code                                        |
+| data       | object | Contains the status of the request and the metrics data |
+| status     | string | Status of the data retrieval (`success`)                |
+| resultType | string | Type of result (`matrix`)                               |
+| result     | array  | Array of metrics and their values                       |
+| metric     | object | Contains various metric labels and their values         |
+| values     | array  | Array of timestamp and metric value pairs               |
 
-Response - 500 Internal Server Error
-Server error with error identifier where and when in service error happened
-
-
-
+**Response - 500 Internal Server Error**  
+Server error with error identifier indicating where and when the error occurred in the service.
 
 
+### GET /api/metrics-api/latest-node-data/{nodeId}
 
+#### Description
+This endpoint returns the latest custom metrics for a node used in our CLI.
 
+#### Request
 
-## GET /api/metrics-api/latest-node-data/{nodeId}
-
-### Description
-This endpoint returns the latest custom metrics for a node that are used in our CLI.
-
-### Request
-
-#### URL
+**URL**  
 `http://localhost:8086/api/metrics-api/latest-node-data/{nodeId}`
 
-#### Method
+**Method**  
 `GET`
 
-#### URL Path Parameters
-| Parameter | Type   | Description                                     |
-|-----------|--------|-------------------------------------------------|
-| nodeId    | string | Identification of the node that we want data from. |
+**URL Path Parameters**
 
-### Request Headers
+| Parameter | Type   | Description                          |
+|-----------|--------|--------------------------------------|
+| nodeId    | string | Identification of the node for data. |
+
+**Request Headers**  
 None
-###EXAMPLE
-Postman http://localhost:8086/api/metrics-api/latest-node-data/b2696545-7931-47c7-af11-cc2ce1d5e10d
 
-### Response - 201 Success
+**Example**  
+Postman:  
+`http://localhost:8086/api/metrics-api/latest-node-data/b2696545-7931-47c7-af11-cc2ce1d5e10d`
+
+#### Response - 201 Success
+
 ```json
 {
     "status": 201,
@@ -242,10 +233,7 @@ Postman http://localhost:8086/api/metrics-api/latest-node-data/b2696545-7931-47c
                 "nodeID": "b2696545-7931-47c7-af11-cc2ce1d5e10d"
             },
             "values": [
-                [
-                    1720514138,
-                    "5.633947530652784"
-                ]
+                [1720514138, "5.633947530652784"]
             ]
         },
         {
@@ -256,10 +244,7 @@ Postman http://localhost:8086/api/metrics-api/latest-node-data/b2696545-7931-47c
                 "nodeID": "b2696545-7931-47c7-af11-cc2ce1d5e10d"
             },
             "values": [
-                [
-                    1720514138,
-                    "188.08166885375977"
-                ]
+                [1720514138, "188.08166885375977"]
             ]
         },
         {
@@ -270,52 +255,46 @@ Postman http://localhost:8086/api/metrics-api/latest-node-data/b2696545-7931-47c
                 "nodeID": "b2696545-7931-47c7-af11-cc2ce1d5e10d"
             },
             "values": [
-                [
-                    1720514138,
-                    "30.84386444091797"
-                ]
+                [1720514138, "30.84386444091797"]
             ]
         }
     ]
-} ... Up to 10 000 results 
+}
+```
 
-| Property | Type | Description                              |
-|----------|------|------------------------------------------|
-| status   | int  | HTTP status code                         |
-| data     | array| Array of metric objects and their values |
+| Property | Type  | Description                              |
+|----------|-------|------------------------------------------|
+| status   | int   | HTTP status code                         |
+| data     | array | Array of metric objects and their values |
 
-### Response - 500 Internal Server Error
-Server error with error identifier where and when in service error happened.
-
-
-
+**Response - 500 Internal Server Error**  
+Server error with error identifier indicating where and when the error occurred in the service.
 
 
+### GET /api/metrics-api/latest-data/{nodeId}
 
-
-
-## GET /api/metrics-api/latest-data/{nodeId}
-
-### Description
+#### Description
 This endpoint returns only the latest metrics written for the specified node.
 
-### Request
+#### Request
 
-#### URL
+**URL**  
 `http://localhost:8086/api/metrics-api/latest-data/{nodeId}`
 
-#### Method
+**Method**  
 `GET`
 
-#### URL Path Parameters
-| Parameter | Type   | Description                                     |
-|-----------|--------|-------------------------------------------------|
-| nodeId    | string | Identification of the node that we want data from. |
+**URL Path Parameters**
 
-### Request Headers
+| Parameter | Type   | Description                          |
+|-----------|--------|--------------------------------------|
+| nodeId    | string | Identification of the node for data. |
+
+**Request Headers**  
 None
 
-### Response - 201 Success
+#### Response - 201 Success
+
 ```json
 {
     "status": 201,
@@ -342,10 +321,7 @@ None
                 "nodeID": "b2696545-7931-47c7-af11-cc2ce1d5e10d"
             },
             "values": [
-                [
-                    1720514145,
-                    "0.034371"
-                ]
+                [1720514145, "0.034371"]
             ]
         },
         {
@@ -371,11 +347,10 @@ None
                 "nodeID": "b2696545-7931-47c7-af11-cc2ce1d5e10d"
             },
             "values": [
-                [
-                    1720514145,
-                    "21.141999"
-                ]
-            ]
+                [1720514145, "21.141999"]
+           
+
+ ]
         },
         {
             "metric": {
@@ -400,21 +375,19 @@ None
                 "nodeID": "b2696545-7931-47c7-af11-cc2ce1d5e10d"
             },
             "values": [
-                [
-                    1720514145,
-                    "0.03344"
-                ]
+                [1720514145, "0.03344"]
             ]
         }
     ]
-} ... Up to 10 000 results 
+}
+```
 
+| Property | Type  | Description                              |
+|----------|-------|------------------------------------------|
+| status   | int   | HTTP status code                         |
+| data     | array | Array of metric objects and their values |
 
-| Property | Type | Description                              |
-|----------|------|------------------------------------------|
-| status   | int  | HTTP status code                         |
-| data     | array| Array of metric objects and their values |
+**Response - 500 Internal Server Error**  
+Server error with error identifier indicating where and when the error occurred in the service.
+```
 
-
-### Response - 500 Internal Server Error
-Server error with error identifier where and when in service error happened.
