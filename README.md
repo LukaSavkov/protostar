@@ -1,6 +1,5 @@
-Here is the formatted documentation for the `README.md` file:
 
-```markdown
+
 # Protostar
 Metrics aggregator for c12s platform
 
