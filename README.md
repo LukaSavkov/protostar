@@ -421,4 +421,4 @@ http://localhost:8086/api/metrics-api/latest-data/b2696545-7931-47c7-af11-cc2ce1
 
 #### Response - 500 Internal Server Error
 Server error with error identifier where and when in service error happened.
-```
+
