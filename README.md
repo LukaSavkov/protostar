@@ -157,7 +157,6 @@ http://localhost:8086/api/metrics-api/1718723240/b2696545-7931-47c7-af11-cc2ce1d
                         "container_label_org_opencontainers_image_created": "2024-07-04T12:49:39Z",
                         "container_label_org_opencontainers_image_description": "Application packaged by Broadcom, Inc.",
                         "container_label_org_opencontainers_image_documentation": "https://github.com/
-
 bitnami/containers/tree/main/bitnami/etcd/README.md",
                         "container_label_org_opencontainers_image_licenses": "Apache-2.0",
                         "container_label_org_opencontainers_image_ref_name": "3.5.14-debian-12-r4",
