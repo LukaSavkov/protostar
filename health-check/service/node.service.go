@@ -2,13 +2,14 @@ package service
 
 import (
 	"context"
-	magnetarapi "github.com/c12s/magnetar/pkg/api"
 	"health-check/config"
 	"health-check/domain"
 	"health-check/mappers"
 	"log"
 	"sync"
 	"time"
+
+	magnetarapi "github.com/c12s/magnetar/pkg/api"
 )
 
 type NodeService struct {
@@ -29,7 +30,7 @@ func (ns *NodeService) SaveNodes() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	resp, err := ns.magnetar.ListNodePool(ctx, &magnetarapi.ListNodePoolReq{})
+	resp, err := ns.magnetar.ListAllNodes(ctx, &magnetarapi.ListAllNodesReq{})
 	if err != nil {
 		log.Println("Error fetching node pool:", err)
 		return

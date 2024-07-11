@@ -1,13 +1,14 @@
 package mappers
 
 import (
-	magnetarapi "github.com/c12s/magnetar/pkg/api"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"health-check/config"
 	"health-check/domain"
 	"health-check/errors"
 	"log"
+
+	magnetarapi "github.com/c12s/magnetar/pkg/api"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func MapError(err *errors.ErrorStruct) error {
@@ -19,7 +20,7 @@ func MapError(err *errors.ErrorStruct) error {
 	return status.Error(codes.Code(err.GetErrorStatus()), err.GetErrorMessage())
 }
 
-func MapFromApiExternalApplicationToModelExternalApplication(list *magnetarapi.ListNodePoolResp, nodsConfig *config.NodeConfig) {
+func MapFromApiExternalApplicationToModelExternalApplication(list *magnetarapi.ListAllNodesResp, nodsConfig *config.NodeConfig) {
 	//if len(nodsConfig.GetLoadedIDs()) == 0 {
 	//	for _, node := range list.GetNodes() {
 	//		nodsConfig.AppendLoadedIDs(node.GetId())

@@ -2,9 +2,7 @@ package service
 
 import (
 	"encoding/json"
-	"github.com/nats-io/nats.go"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/robfig/cron/v3"
+	"fmt"
 	"health-check/collector"
 	"health-check/config"
 	"health-check/domain"
@@ -12,6 +10,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/nats-io/nats.go"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/robfig/cron/v3"
 )
 
 type PrometheusService struct {
@@ -85,10 +87,13 @@ func NewPrometheusService(ns *nats.Conn, nodes *config.NodeConfig, prometheusReg
 //	return metricKey, labelSlice, labelValues
 //}
 
-func (ps *PrometheusService) ScheduleNatsRequest(natsSubject string) {
+func (ps *PrometheusService) ScheduleNatsRequest() {
 	c := cron.New()
 	_, err := c.AddFunc("@every 60s", func() {
-		ps.HandleNatsRequest(natsSubject)
+		for nodeId := range ps.nodes.GetNodes() {
+			subject := fmt.Sprintf("%s.metrics", nodeId)
+			ps.HandleNatsRequest(subject)
+		}
 	})
 	if err != nil {
 		log.Println("Error scheduling cron job:", err)
