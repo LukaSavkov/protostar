@@ -44,5 +44,12 @@ func (nm NodeMetricsService) LastNodeDataWritten(nodeID string) (json.RawMessage
 		return nil, errors.NewError(err.GetErrorMessage(), 500)
 	}
 	return readMetrics, nil
+}
 
+func (nm NodeMetricsService) LastClusterDataWritten(clusterID string) (json.RawMessage, *errors.ErrorStruct) {
+	readMetrics, err := nm.NodeMetricsData.ReadLastClusterDataWritten(clusterID)
+	if err != nil {
+		return nil, errors.NewError(err.GetErrorMessage(), 500)
+	}
+	return readMetrics, nil
 }

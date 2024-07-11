@@ -30,6 +30,7 @@ func (httpServer *HttpServer) ConfigureRouter() *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc("/api/metrics-api/latest-data/{nodeID}", httpServer.metricsHandler.LastDataWritten).Methods("GET")
 	router.HandleFunc("/api/metrics-api/latest-node-data/{nodeID}", httpServer.metricsHandler.LastNodeDataWritten).Methods("GET")
+	router.HandleFunc("/api/metrics-api/latest-cluster-data/{clusterID}", httpServer.metricsHandler.LastClusterDataWritten).Methods("GET")
 	router.HandleFunc("/api/metrics-api/ping", httpServer.metricsHandler.Ping).Methods("GET")
 	router.HandleFunc("/api/metrics-api/{timestamp}/{nodeID}", httpServer.metricsHandler.ReadMetricsAfterTimestamp).Methods("GET")
 

@@ -1,18 +1,21 @@
 package collector
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
 	"health-check/domain"
 	"sync"
+
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 type CustomCollector struct {
 	metrics []domain.MetricData
-	mu      sync.Mutex
+	mu      *sync.Mutex
 }
 
 func NewCustomCollector() *CustomCollector {
-	return &CustomCollector{}
+	return &CustomCollector{
+		mu: &sync.Mutex{},
+	}
 }
 
 func (collector *CustomCollector) Describe(ch chan<- *prometheus.Desc) {
@@ -23,7 +26,7 @@ func (collector *CustomCollector) Describe(ch chan<- *prometheus.Desc) {
 func (collector *CustomCollector) UpdateMetrics(newMetrics []domain.MetricData) {
 	collector.mu.Lock()
 	defer collector.mu.Unlock()
-	collector.metrics = newMetrics
+	collector.metrics = append(collector.metrics, newMetrics...)
 }
 
 func (collector *CustomCollector) Collect(ch chan<- prometheus.Metric) {
@@ -57,6 +60,7 @@ func (collector *CustomCollector) Collect(ch chan<- prometheus.Metric) {
 			seenMetrics[metricKey] = true
 		}
 	}
+	collector.metrics = make([]domain.MetricData, 0)
 }
 
 func joinLabels(labelValues []string) string {

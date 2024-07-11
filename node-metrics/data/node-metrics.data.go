@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"metrics-api/domain"
 	"metrics-api/errors"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 )
@@ -116,7 +118,7 @@ func (nr *NodeMetricsData) LastDataWritten(nodeID string) (json.RawMessage, *err
 	// Only retain the first value in the values array for each metric
 	for i, result := range promResp.Data.Result {
 		if len(result.Values) > 0 {
-			promResp.Data.Result[i].Values = result.Values[:1] // Keep only the first element
+			promResp.Data.Result[i].Values = result.Values[len(result.Values)-1:] // Keep only the first element
 		}
 	}
 
@@ -129,16 +131,12 @@ func (nr *NodeMetricsData) LastDataWritten(nodeID string) (json.RawMessage, *err
 }
 
 func (nr *NodeMetricsData) ReadLastNodeDataWritten(nodeID string) (json.RawMessage, *errors.ErrorStruct) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	urlPrefix := "http://prometheus_healthcheck:9090/api/v1/query?query="
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	currentTime := time.Now().Unix()
-	fifteenMinutesAgo := time.Now().Add(-120 * time.Minute).Unix()
-
-	step := calculateStep(fifteenMinutesAgo, currentTime)
-
-	url := fmt.Sprintf("http://prometheus_healthcheck:9090/api/v1/query_range?query={nodeID=~\"%s\"}&start=%d&end=%d&step=%s",
-		nodeID, fifteenMinutesAgo, currentTime, step)
+	url := fmt.Sprintf("http://prometheus_healthcheck:9090/api/v1/query?query=last_over_time({nodeID=~\"%s\"}[10m])", nodeID)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
@@ -160,19 +158,38 @@ func (nr *NodeMetricsData) ReadLastNodeDataWritten(nodeID string) (json.RawMessa
 		return nil, errors.NewError("Failed to read response body: "+err.Error(), 500)
 	}
 
-	var promResp domain.PrometheusResponse
+	var promResp domain.PrometheusSingleResponse
 	if err := json.Unmarshal(body, &promResp); err != nil {
 		return nil, errors.NewError("Failed to unmarshal response body: "+err.Error(), 500)
 	}
 
-	var filteredResults []domain.PrometheusResult
+	var filteredResults []domain.PrometheusSingleResult
 	for _, result := range promResp.Data.Result {
-		if metricName, ok := result.Metric["__name__"]; ok && strings.HasPrefix(metricName, "custom_") {
-			if len(result.Values) > 0 {
-				result.Values = result.Values[:1] // Keep only the first element
-			}
+		if metricName, ok := result.Metric["__name__"]; ok && strings.HasPrefix(metricName, "custom_") && !slices.Contains(custom_calculated_metrics, metricName) {
 			filteredResults = append(filteredResults, result)
 		}
+	}
+
+	url = fmt.Sprintf("%ssum(rate(node_cpu_seconds_total{nodeID=\"%s\",mode!=\"idle\"}[1m])*100)", urlPrefix, nodeID)
+	log.Println(url)
+	promResp2, promErr := nr.query(url)
+	if promErr != nil {
+		return nil, promErr
+	}
+	for _, result := range promResp2.Data.Result {
+		result.Metric["__name__"] = "custom_node_cpu_usage_percentage"
+		filteredResults = append(filteredResults, result)
+	}
+
+	url = fmt.Sprintf("%srate(container_cpu_usage_seconds_total{nodeID=\"%s\",mode!=\"idle\",image!=\"\"}[1m])*100", urlPrefix, nodeID)
+	log.Println(url)
+	promResp2, promErr = nr.query(url)
+	if promErr != nil {
+		return nil, promErr
+	}
+	for _, result := range promResp2.Data.Result {
+		result.Metric["__name__"] = "custom_service_cpu_usage"
+		filteredResults = append(filteredResults, result)
 	}
 
 	filteredData, err := json.Marshal(filteredResults)
@@ -181,4 +198,109 @@ func (nr *NodeMetricsData) ReadLastNodeDataWritten(nodeID string) (json.RawMessa
 	}
 
 	return filteredData, nil
+}
+
+func (nr *NodeMetricsData) ReadLastClusterDataWritten(clusterID string) (json.RawMessage, *errors.ErrorStruct) {
+	urlPrefix := "http://prometheus_healthcheck:9090/api/v1/query?query="
+	url := fmt.Sprintf("%slast_over_time({clusterID=~\"%s\"}[10m])", urlPrefix, clusterID)
+	promResp, promErr := nr.query(url)
+	if promErr != nil {
+		return nil, promErr
+	}
+
+	var filteredResults []domain.PrometheusSingleResult
+	for _, result := range promResp.Data.Result {
+		if metricName, ok := result.Metric["__name__"]; ok && strings.HasPrefix(metricName, "custom_service") && !slices.Contains(custom_calculated_metrics, metricName) {
+			filteredResults = append(filteredResults, result)
+		}
+	}
+
+	urlTemplate := "%ssum(last_over_time(%s{clusterID=~\"%s\"}[10m]))"
+	for _, metricName := range custom_node_metrics {
+		url := fmt.Sprintf(urlTemplate, urlPrefix, metricName, clusterID)
+		promResp, promErr := nr.query(url)
+		if promErr != nil {
+			return nil, promErr
+		}
+		for _, result := range promResp.Data.Result {
+			result.Metric["__name__"] = metricName
+			filteredResults = append(filteredResults, result)
+		}
+	}
+
+	url = fmt.Sprintf("%ssum(rate(node_cpu_seconds_total{clusterID=\"%s\",mode!=\"idle\"}[1m])*100)", urlPrefix, clusterID)
+	promResp, promErr = nr.query(url)
+	if promErr != nil {
+		return nil, promErr
+	}
+	for _, result := range promResp.Data.Result {
+		result.Metric["__name__"] = "custom_node_cpu_usage_percentage"
+		filteredResults = append(filteredResults, result)
+	}
+
+	url = fmt.Sprintf("%srate(container_cpu_usage_seconds_total{clusterID=\"%s\",mode!=\"idle\",image!=\"\"}[1m])*100", urlPrefix, clusterID)
+	promResp, promErr = nr.query(url)
+	if promErr != nil {
+		return nil, promErr
+	}
+	for _, result := range promResp.Data.Result {
+		result.Metric["__name__"] = "custom_service_cpu_usage"
+		filteredResults = append(filteredResults, result)
+	}
+
+	filteredData, err := json.Marshal(filteredResults)
+	if err != nil {
+		return nil, errors.NewError("Failed to marshal filtered results: "+err.Error(), 500)
+	}
+
+	return filteredData, nil
+}
+
+func (nr *NodeMetricsData) query(url string) (*domain.PrometheusSingleResponse, *errors.ErrorStruct) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, errors.NewError("Failed to create HTTP request: "+err.Error(), 500)
+	}
+
+	resp, err := nr.client.Do(req)
+	if err != nil {
+		return nil, errors.NewError("HTTP request failed: "+err.Error(), 500)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, err := io.ReadAll(resp.Body)
+		if err == nil {
+			log.Println(string(body))
+		}
+		return nil, errors.NewError(fmt.Sprintf("Unexpected HTTP status: %d", resp.StatusCode), resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.NewError("Failed to read response body: "+err.Error(), 500)
+	}
+
+	var promResp *domain.PrometheusSingleResponse = new(domain.PrometheusSingleResponse)
+	if err := json.Unmarshal(body, promResp); err != nil {
+		return nil, errors.NewError("Failed to unmarshal response body: "+err.Error(), 500)
+	}
+	return promResp, nil
+}
+
+var custom_node_metrics = []string{
+	"custom_node_ram_available_mb",
+	"custom_node_ram_total_mb",
+	"custom_node_disk_usage_gb",
+	"custom_node_disk_total_gb",
+	"custom_node_network_receive_mb",
+	"custom_node_network_transmit_mb",
+}
+
+var custom_calculated_metrics = []string{
+	"custom_node_cpu_usage_percentage",
+	"custom_service_cpu_usage",
 }
