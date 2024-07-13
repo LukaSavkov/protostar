@@ -99,8 +99,8 @@ func (a *app) startPrometheusServices(registry *prometheus.Registry) error {
 		Addr:         ":8080",
 		Handler:      router,
 		IdleTimeout:  120 * time.Second,
-		ReadTimeout:  1 * time.Second,
-		WriteTimeout: 1 * time.Second,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 	fmt.Println("Server listening on :8080")
 	err := server.ListenAndServe()

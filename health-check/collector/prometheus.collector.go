@@ -2,6 +2,8 @@ package collector
 
 import (
 	"health-check/domain"
+	"log"
+	"strings"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -9,13 +11,11 @@ import (
 
 type CustomCollector struct {
 	metrics []domain.MetricData
-	mu      *sync.Mutex
+	mu      sync.Mutex
 }
 
 func NewCustomCollector() *CustomCollector {
-	return &CustomCollector{
-		mu: &sync.Mutex{},
-	}
+	return &CustomCollector{}
 }
 
 func (collector *CustomCollector) Describe(ch chan<- *prometheus.Desc) {
@@ -25,17 +25,29 @@ func (collector *CustomCollector) Describe(ch chan<- *prometheus.Desc) {
 
 func (collector *CustomCollector) UpdateMetrics(newMetrics []domain.MetricData) {
 	collector.mu.Lock()
-	defer collector.mu.Unlock()
+
+	log.Println("started updating metrics list")
+
 	collector.metrics = append(collector.metrics, newMetrics...)
+	log.Println(len(collector.metrics))
+
+	log.Println("finished updating metrics list")
+
+	collector.mu.Unlock()
 }
 
 func (collector *CustomCollector) Collect(ch chan<- prometheus.Metric) {
 	collector.mu.Lock()
-	defer collector.mu.Unlock()
+
+	log.Println("started collecting metrics")
 
 	seenMetrics := make(map[string]bool)
 
 	for _, metricData := range collector.metrics {
+		// wtf
+		if strings.HasPrefix(metricData.MetricName, "go_") || strings.HasPrefix(metricData.MetricName, "process_") {
+			continue
+		}
 		labels := make([]string, 0, len(metricData.Labels))
 		labelValues := make([]string, 0, len(metricData.Labels))
 		for key, value := range metricData.Labels {
@@ -43,28 +55,38 @@ func (collector *CustomCollector) Collect(ch chan<- prometheus.Metric) {
 			labelValues = append(labelValues, value)
 		}
 
-		desc := prometheus.NewDesc(
-			metricData.MetricName,
-			"Custom metric collected from external source",
-			labels, nil,
-		)
-
-		metricKey := metricData.MetricName + "-" + joinLabels(labelValues)
+		metricKey := metricData.MetricName + "-" + joinLabels(labels, labelValues)
 		if !seenMetrics[metricKey] {
+			seenMetrics[metricKey] = true
+			desc := prometheus.NewDesc(
+				metricData.MetricName,
+				"Custom metric collected from external source",
+				labels, nil,
+			)
 			ch <- prometheus.MustNewConstMetric(
 				desc,
 				prometheus.GaugeValue,
 				metricData.Value,
 				labelValues...,
 			)
-			seenMetrics[metricKey] = true
+		} else {
+			log.Println(metricKey)
 		}
 	}
+	log.Println(len(collector.metrics))
 	collector.metrics = make([]domain.MetricData, 0)
+	log.Println(len(collector.metrics))
+
+	log.Println("finished collecting metrics")
+
+	collector.mu.Unlock()
 }
 
-func joinLabels(labelValues []string) string {
+func joinLabels(labelKeys, labelValues []string) string {
 	result := ""
+	for _, value := range labelKeys {
+		result += value + "-"
+	}
 	for _, value := range labelValues {
 		result += value + "-"
 	}

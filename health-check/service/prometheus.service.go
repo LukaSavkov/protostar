@@ -89,7 +89,7 @@ func NewPrometheusService(ns *nats.Conn, nodes *config.NodeConfig, prometheusReg
 
 func (ps *PrometheusService) ScheduleNatsRequest() {
 	c := cron.New()
-	_, err := c.AddFunc("@every 30s", func() {
+	_, err := c.AddFunc("@every 1s", func() {
 		for nodeId := range ps.nodes.GetNodes() {
 			log.Printf("****** HEALTH CHECK STARTED FOR NODE ID=%s ******\n", nodeId)
 			subject := fmt.Sprintf("%s.metrics", nodeId)
@@ -118,8 +118,6 @@ func (ps *PrometheusService) HandleNatsRequest(natsSubject string) {
 		return
 	}
 
-	log.Println(metrics)
-
 	for i, metric := range metrics.Metrics {
 		if i == 0 {
 			log.Println(metrics.NodeID)
@@ -136,13 +134,9 @@ func (ps *PrometheusService) HandleNatsRequest(natsSubject string) {
 				foundNode.Services[service] = make([]domain.MetricData, 0)
 			}
 		}
-
 		if strings.Contains(metric.MetricName, "custom_service") {
-
 			foundNode.Services[service] = append(foundNode.Services[service], metric)
-
 		}
-
 		foundNode.LastSeen = time.Now()
 	}
 	err = ps.PublishNodesToNATS(ps.nodes)
@@ -153,6 +147,8 @@ func (ps *PrometheusService) HandleNatsRequest(natsSubject string) {
 }
 
 func (ps *PrometheusService) PublishNodesToNATS(data *config.NodeConfig) error {
+	log.Println("started publishing to nats")
+	defer log.Println("finished publishing to nats")
 	msg, err := json.Marshal(data)
 	if err != nil {
 		return err
