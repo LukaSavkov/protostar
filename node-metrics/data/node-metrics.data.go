@@ -170,7 +170,8 @@ func (nr *NodeMetricsData) ReadLastNodeDataWritten(nodeID string) (json.RawMessa
 		}
 	}
 
-	url = fmt.Sprintf("%ssum(rate(node_cpu_seconds_total{nodeID=\"%s\",mode!=\"idle\"}[1m])*100)", urlPrefix, nodeID)
+	url = fmt.Sprintf("%s100*(scalar(last_over_time(machine_cpu_cores{nodeID=~\"%s\"}[1m]))-sum(avg by (cpu)(rate(node_cpu_seconds_total{mode=\"idle\",nodeID=\"%s\"}[1m]))))", urlPrefix, nodeID, nodeID)
+	url = strings.ReplaceAll(url, " ", "%20")
 	log.Println(url)
 	promResp2, promErr := nr.query(url)
 	if promErr != nil {
@@ -228,7 +229,8 @@ func (nr *NodeMetricsData) ReadLastClusterDataWritten(clusterID string) (json.Ra
 		}
 	}
 
-	url = fmt.Sprintf("%ssum(rate(node_cpu_seconds_total{clusterID=\"%s\",mode!=\"idle\"}[1m])*100)", urlPrefix, clusterID)
+	url = fmt.Sprintf("%s100*(scalar(sum(last_over_time(machine_cpu_cores{clusterID=~\"%s\"}[1m])))-sum(avg by (nodeID,cpu)(rate(node_cpu_seconds_total{mode=\"idle\",clusterID=\"%s\"}[1m]))))", urlPrefix, clusterID, clusterID)
+	url = strings.ReplaceAll(url, " ", "%20")
 	promResp, promErr = nr.query(url)
 	if promErr != nil {
 		return nil, promErr
