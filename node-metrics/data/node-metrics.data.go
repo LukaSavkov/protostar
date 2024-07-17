@@ -33,7 +33,7 @@ func calculateStep(start, end int64) string {
 	return fmt.Sprintf("%ds", step)
 }
 
-func (nr *NodeMetricsData) ReadMetricsAfterTimestamp(timestamp int64, nodeID string) (json.RawMessage, *errors.ErrorStruct) {
+func (nr *NodeMetricsData) ReadMetricsAfterTimestamp(timestamp int64) (json.RawMessage, *errors.ErrorStruct) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -50,8 +50,134 @@ func (nr *NodeMetricsData) ReadMetricsAfterTimestamp(timestamp int64, nodeID str
 	step := calculateStep(timestamp, time.Now().Unix())
 	fmt.Printf("Using step size of %s seconds\n", step)
 
-	url := fmt.Sprintf("http://prometheus_healthcheck:9090/api/v1/query_range?query={nodeID=~\"%s\"}&start=%d&end=%d&step=%s",
-		nodeID, from, now, step)
+	url := fmt.Sprintf("http://prometheus_healthcheck:9090/api/v1/query_range?query={__name__!=\"\"}&start=%d&end=%d&step=%s", from, now, step)
+	fmt.Println("URL is", url)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		fmt.Println("Error creating request")
+		return nil, errors.NewError("Failed to create HTTP request: "+err.Error(), 500)
+	}
+
+	resp, err := nr.client.Do(req)
+	if err != nil {
+		fmt.Println("Error during request")
+		return nil, errors.NewError("HTTP request failed: "+err.Error(), 500)
+	}
+	defer resp.Body.Close() // Ensure the response body is closed
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println("Unexpected HTTP status")
+		return nil, errors.NewError(fmt.Sprintf("Unexpected HTTP status: %d", resp.StatusCode), resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading body")
+		return nil, errors.NewError("Failed to read response body: "+err.Error(), 500)
+	}
+	fmt.Println("Raw JSON Body", string(body))
+
+	return body, nil
+}
+
+func (nr *NodeMetricsData) ReadMetricsInRange(timestamp, end int64) (json.RawMessage, *errors.ErrorStruct) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	fmt.Println("Entering ReadMetricsAfterTimestamp")
+	fmt.Println("Timestamp is", timestamp)
+
+	from := timestamp
+
+	fmt.Println("Timestamp now is", end)
+	fmt.Println("Timestamp from is", from)
+
+	// Calculate step to aim for no more than 10000 points
+	step := calculateStep(timestamp, end)
+	fmt.Printf("Using step size of %s seconds\n", step)
+
+	url := fmt.Sprintf("http://prometheus_healthcheck:9090/api/v1/query_range?query={__name__!=\"\"}&start=%d&end=%d&step=%s", from, end, step)
+	fmt.Println("URL is", url)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		fmt.Println("Error creating request")
+		return nil, errors.NewError("Failed to create HTTP request: "+err.Error(), 500)
+	}
+
+	resp, err := nr.client.Do(req)
+	if err != nil {
+		fmt.Println("Error during request")
+		return nil, errors.NewError("HTTP request failed: "+err.Error(), 500)
+	}
+	defer resp.Body.Close() // Ensure the response body is closed
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println("Unexpected HTTP status")
+		return nil, errors.NewError(fmt.Sprintf("Unexpected HTTP status: %d", resp.StatusCode), resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading body")
+		return nil, errors.NewError("Failed to read response body: "+err.Error(), 500)
+	}
+	fmt.Println("Raw JSON Body", string(body))
+
+	return body, nil
+}
+
+func (nr *NodeMetricsData) ReadAppMetrics(app, nodeID string) (json.RawMessage, *errors.ErrorStruct) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	start := time.Now().Add(-12 * time.Hour).Unix()
+	// Calculate step to aim for no more than 10000 points
+	step := calculateStep(start, time.Now().Unix())
+	fmt.Printf("Using step size of %s seconds\n", step)
+
+	url := fmt.Sprintf("http://prometheus_healthcheck:9090/api/v1/query_range?query={app=\"%s\",nodeID=\"%s\"}&start=%d&end=%d&step=%s", app, nodeID, start, time.Now().Unix(), step)
+	fmt.Println("URL is", url)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		fmt.Println("Error creating request")
+		return nil, errors.NewError("Failed to create HTTP request: "+err.Error(), 500)
+	}
+
+	resp, err := nr.client.Do(req)
+	if err != nil {
+		fmt.Println("Error during request")
+		return nil, errors.NewError("HTTP request failed: "+err.Error(), 500)
+	}
+	defer resp.Body.Close() // Ensure the response body is closed
+
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println("Unexpected HTTP status")
+		return nil, errors.NewError(fmt.Sprintf("Unexpected HTTP status: %d", resp.StatusCode), resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading body")
+		return nil, errors.NewError("Failed to read response body: "+err.Error(), 500)
+	}
+	fmt.Println("Raw JSON Body", string(body))
+
+	return body, nil
+}
+
+func (nr *NodeMetricsData) ReadContainerMetrics(container, nodeID string) (json.RawMessage, *errors.ErrorStruct) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	start := time.Now().Add(-12 * time.Hour).Unix()
+	// Calculate step to aim for no more than 10000 points
+	step := calculateStep(start, time.Now().Unix())
+	fmt.Printf("Using step size of %s seconds\n", step)
+
+	url := fmt.Sprintf("http://prometheus_healthcheck:9090/api/v1/query_range?query={image!=\"\",name=\"%s\",nodeID=\"%s\"}&start=%d&end=%d&step=%s", container, nodeID, start, time.Now().Unix(), step)
 	fmt.Println("URL is", url)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
