@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/gorilla/mux"
 	"metrics-api/errors"
 	"metrics-api/service"
 	"metrics-api/utils"
 	"net/http"
 	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 type NodeMetricsHandler struct {
@@ -60,6 +61,19 @@ func (nh NodeMetricsHandler) LastNodeDataWritten(rw http.ResponseWriter, h *http
 	nodeID := vars["nodeID"]
 
 	returnedMetrics, err := nh.NodeMetricsService.LastNodeDataWritten(nodeID)
+	if err != nil {
+		utils.WriteErrorResp(err.GetErrorMessage(), 500, "api/metrics-api/id", rw)
+		return
+	}
+	utils.WriteResp(returnedMetrics, 201, rw)
+}
+
+func (nh NodeMetricsHandler) LastClusterDataWritten(rw http.ResponseWriter, h *http.Request) {
+	fmt.Println("USLO U HANDLER")
+	vars := mux.Vars(h)
+	clusterID := vars["clusterID"]
+
+	returnedMetrics, err := nh.NodeMetricsService.LastClusterDataWritten(clusterID)
 	if err != nil {
 		utils.WriteErrorResp(err.GetErrorMessage(), 500, "api/metrics-api/id", rw)
 		return

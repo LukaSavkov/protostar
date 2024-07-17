@@ -4,10 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/gorilla/mux"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/robfig/cron/v3"
 	"health-check/collector"
 	"health-check/config"
 	"health-check/service"
@@ -15,6 +11,11 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/robfig/cron/v3"
 )
 
 type app struct {
@@ -90,8 +91,7 @@ func (a *app) init() {
 }
 
 func (a *app) startPrometheusServices(registry *prometheus.Registry) error {
-	a.prometheusService.ScheduleNatsRequest(a.config.GetNatsSubject())
-	a.prometheusService.HandleNatsRequest(a.config.GetNatsSubject())
+	a.prometheusService.ScheduleNatsRequest()
 	promHttpHandler := promhttp.HandlerFor(registry, promhttp.HandlerOpts{})
 	router := mux.NewRouter()
 	router.Path("/metrics").Handler(promHttpHandler)
@@ -99,8 +99,8 @@ func (a *app) startPrometheusServices(registry *prometheus.Registry) error {
 		Addr:         ":8080",
 		Handler:      router,
 		IdleTimeout:  120 * time.Second,
-		ReadTimeout:  1 * time.Second,
-		WriteTimeout: 1 * time.Second,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
 	}
 	fmt.Println("Server listening on :8080")
 	err := server.ListenAndServe()

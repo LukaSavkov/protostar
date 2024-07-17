@@ -14,8 +14,9 @@ type MetricData struct {
 	Timestamp  int64             `json:"timestamp"`
 }
 type MetricFileFormat struct {
-	Metrics []MetricData `json:"metrics"`
-	NodeID  string       `json:"nodeID"`
+	Metrics   []MetricData `json:"metrics"`
+	NodeID    string       `json:"nodeId"`
+	ClusterId string       `json:"clusterId"`
 }
 type MetricsSendingDataHolder struct {
 	Services map[string]bool

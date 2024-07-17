@@ -25,9 +25,22 @@ type PrometheusResponse struct {
 	} `json:"data"`
 }
 
+type PrometheusSingleResponse struct {
+	Status string `json:"status"`
+	Data   struct {
+		ResultType string                   `json:"resultType"`
+		Result     []PrometheusSingleResult `json:"result"`
+	} `json:"data"`
+}
+
 type PrometheusResult struct {
 	Metric map[string]string `json:"metric"`
 	Values [][]interface{}   `json:"values"`
+}
+
+type PrometheusSingleResult struct {
+	Metric map[string]string `json:"metric"`
+	Values []interface{}     `json:"value"`
 }
 
 type FilteredMetric struct {
