@@ -45,8 +45,8 @@ func (httpServer *HttpServer) InitServer(port string) {
 		Addr:         ":" + port,
 		Handler:      httpServer.ConfigureRouter(),
 		IdleTimeout:  120 * time.Second,
-		ReadTimeout:  1 * time.Second,
-		WriteTimeout: 1 * time.Second,
+		ReadTimeout:  120 * time.Second,
+		WriteTimeout: 120 * time.Second,
 	}
 }
 
