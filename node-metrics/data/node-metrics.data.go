@@ -34,7 +34,7 @@ func calculateStep(start, end int64) string {
 }
 
 func (nr *NodeMetricsData) ReadMetricsAfterTimestamp(timestamp int64) (json.RawMessage, *errors.ErrorStruct) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	fmt.Println("Entering ReadMetricsAfterTimestamp")
@@ -82,7 +82,7 @@ func (nr *NodeMetricsData) ReadMetricsAfterTimestamp(timestamp int64) (json.RawM
 }
 
 func (nr *NodeMetricsData) ReadMetricsInRange(timestamp, end int64) (json.RawMessage, *errors.ErrorStruct) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	fmt.Println("Entering ReadMetricsAfterTimestamp")
@@ -129,7 +129,7 @@ func (nr *NodeMetricsData) ReadMetricsInRange(timestamp, end int64) (json.RawMes
 }
 
 func (nr *NodeMetricsData) ReadAppMetrics(app, nodeID string) (json.RawMessage, *errors.ErrorStruct) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	start := time.Now().Add(-12 * time.Hour).Unix()
@@ -169,7 +169,7 @@ func (nr *NodeMetricsData) ReadAppMetrics(app, nodeID string) (json.RawMessage, 
 }
 
 func (nr *NodeMetricsData) ReadContainerMetrics(container, nodeID string) (json.RawMessage, *errors.ErrorStruct) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	start := time.Now().Add(-12 * time.Hour).Unix()
@@ -209,7 +209,7 @@ func (nr *NodeMetricsData) ReadContainerMetrics(container, nodeID string) (json.
 }
 
 func (nr *NodeMetricsData) LastDataWritten(nodeID string) (json.RawMessage, *errors.ErrorStruct) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	currentTime := time.Now().Unix()
@@ -259,7 +259,7 @@ func (nr *NodeMetricsData) LastDataWritten(nodeID string) (json.RawMessage, *err
 func (nr *NodeMetricsData) ReadLastNodeDataWritten(nodeID string) (json.RawMessage, *errors.ErrorStruct) {
 	urlPrefix := "http://prometheus_healthcheck:9090/api/v1/query?query="
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	url := fmt.Sprintf("http://prometheus_healthcheck:9090/api/v1/query?query=last_over_time({nodeID=~\"%s\"}[10m])", nodeID)
@@ -385,7 +385,7 @@ func (nr *NodeMetricsData) ReadLastClusterDataWritten(clusterID string) (json.Ra
 }
 
 func (nr *NodeMetricsData) query(url string) (*domain.PrometheusSingleResponse, *errors.ErrorStruct) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)

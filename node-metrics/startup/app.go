@@ -48,7 +48,7 @@ func (a *App) init() {
 	fmt.Println("USLO U INIT")
 
 	client := &http.Client{
-		Timeout: time.Second * 30, // Set a 30-second timeout for all requests
+		Timeout: time.Second * 120, // Set a 30-second timeout for all requests
 		Transport: &http.Transport{
 			MaxIdleConns:       10,
 			IdleConnTimeout:    30 * time.Second,
