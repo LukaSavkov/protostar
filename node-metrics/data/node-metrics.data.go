@@ -426,6 +426,7 @@ var custom_node_metrics = []string{
 	"custom_node_disk_total_gb",
 	"custom_node_network_receive_mb",
 	"custom_node_network_transmit_mb",
+	"machine_cpu_cores",
 }
 
 var custom_calculated_metrics = []string{
