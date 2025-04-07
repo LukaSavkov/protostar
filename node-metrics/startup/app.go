@@ -11,8 +11,11 @@ import (
 	"metrics-api/servers"
 	"metrics-api/service"
 	"net/http"
+	"os"
 	"sync"
 	"time"
+
+	"github.com/robfig/cron/v3"
 )
 
 type App struct {
@@ -68,6 +71,31 @@ func (a *App) init() {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
+
+	natsConn, err := NewNatsConn(os.Getenv("NATS_ADDRESS"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	magnetarClient, err := newMagnetarClient(os.Getenv("MAGNETAR_ADDRESS"))
+	if err != nil {
+		log.Fatalln("Failed to create magnetar client:", err)
+	}
+	clusterService, err := service.NewClusterMetricsService(metricsService, natsConn, magnetarClient)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	c := cron.New()
+
+	_, err = c.AddFunc(fmt.Sprintf("@every %ss", os.Getenv("CLUSTER_METRICS_PUB_INTERVAL")), func() {
+		log.Println("Executing cron job to publish cluster metrics data")
+		clusterService.Publish()
+	})
+	if err != nil {
+		log.Fatalln("Failed to schedule cron job for saving nodes:", err)
+	}
+	c.Start()
+
 	customHttpServer := servers.NewHttpServer(metricsHandler)
 	a.httpServer = customHttpServer
 	a.startHttpServer()
